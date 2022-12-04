@@ -1,20 +1,37 @@
-const noteData = require("../db/db.js");
+const router = require('express').Router();
+const fs = require('fs');
+const db = require('../db/db.json');
+const uniqid = require('uniqid');
 
-module.exports = function(app) {
+router.get('/api/notes', (req, res) => {
+    fs.readFile('./db/db.json', (err, data) => {
+        if (err) throw err;
+        console.log(JSON.parse(data));
 
-    app.get("/api/notes/", function(req,res) {
-        res.json(noteData);
+        res.send(data)
+    })
+})
+
+router.post('/api/notes', (req, res) => {
+    let newNote = {
+        id: uniqid(),
+        title: req.body.title,
+        text: req.body.text
+    }
+    fs.readFile('./db/db.json', (err, data) => {
+        if (err) throw err;
+
+        let newData = JSON.parse(data);
+
+        newData.push(newNote);
+        console.log(newData)
+
+        fs.writeFile('./db/db.json', JSON.stringify(newData), (err) => {
+            if (err) throw err;
+
+            res.send('successfully added');
+        })
     });
-    
-    app.post("/api/notes/", function(req,res) {
-        noteData.push(req.body);
-        res.json(true);
-    })
+})
 
-    app.delete("/api/notes/", function(req,res) {
-        noteData.length = 0;
-
-        res.json({ok: true});
-    })
-
-};
+module.exports = router;
